@@ -95,9 +95,19 @@ def getJsonContentsRA (jsonInput):
     except(ValueError, KeyError, TypeError):
         print "Error: Please check JSON syntax... \n"
     #print len(nanoparticles), len(read_across_datapoints)
-    #print read_across_datapoints
-    return variables, datapoints, read_across_datapoints, predictionFeature, target_variable_values, readAcrossURIs, nanoparticles
+    print readAcrossURIs, read_across_datapoints
+    return variables, datapoints, read_across_datapoints, predictionFeature, target_variable_values, byteify(readAcrossURIs), nanoparticles
 
+def byteify(input):
+    if isinstance(input, dict):
+        return {byteify(key): byteify(value)
+                for key, value in input.iteritems()}
+    elif isinstance(input, list):
+        return [byteify(element) for element in input]
+    elif isinstance(input, unicode):
+        return input.encode('utf-8')
+    else:
+        return input
 
 """
     [[],[]]  Matrix to dictionary for Nearest Neighboura
@@ -106,7 +116,7 @@ def mat2dicNN(matrix, name):
     myDict = {}
     for i in range (len (matrix[0])):
         myDict[name + " NN_" + str(i+1)] = [matrix[0][i], matrix[1][i]]
-    return myDict
+    return byteify(myDict)
 
 """
     [[],[]]  Matrix to dictionary 
@@ -115,8 +125,15 @@ def mat2dic(matrix):
     myDict = {}
     for i in range (len (matrix)):
         myDict["Row_" + str(i+1)] = [matrix[0][i], matrix[1][i]]
-    return myDict
+    return byteify(myDict)
 
+"""
+    [[]]  Matrix to dictionary Single Row
+"""
+def mat2dicSingle(matrix):
+    myDict = {}
+    myDict["Row_1"] = matrix
+    return byteify(myDict)
 
 """
     Normaliser
@@ -366,31 +383,42 @@ def create_task_readacross():
     #print eucl_predictions, manh_predictions, ens_predictions
     #print eucl_applicability, manh_applicability, ens_applicability
 
-    # predictions
-    eucl_predictions_transposed = map(list, zip(*eucl_predictions)) 
-    eucl_pred_dict = mat2dic(eucl_predictions_transposed)
-    #print eucl_pred_dict
 
-    manh_predictions_transposed = map(list, zip(*manh_predictions)) 
-    manh_pred_dict = mat2dic(manh_predictions_transposed)
-    #print manh_pred_dict
+    if len (eucl_predictions) > 1:
+        # predictions
+        eucl_predictions_transposed = map(list, zip(*eucl_predictions)) 
+        #print "\n\n\n", eucl_predictions, eucl_predictions_transposed,"\n\n\n"
+        eucl_pred_dict = mat2dic(eucl_predictions_transposed)
+        #print eucl_pred_dict
 
-    ens_predictions_transposed = map(list, zip(*ens_predictions)) 
-    ens_pred_dict = mat2dic(ens_predictions_transposed)
-    #print ens_pred_dict
+        manh_predictions_transposed = map(list, zip(*manh_predictions)) 
+        manh_pred_dict = mat2dic(manh_predictions_transposed)
+        #print manh_pred_dict
 
-    # applicability
-    eucl_applicability_transposed = map(list, zip(*eucl_applicability)) 
-    eucl_appl_dict = mat2dic(eucl_applicability_transposed)
-    #print eucl_appl_dict
+        ens_predictions_transposed = map(list, zip(*ens_predictions)) 
+        ens_pred_dict = mat2dic(ens_predictions_transposed)
+        #print ens_pred_dict
 
-    manh_applicability_transposed = map(list, zip(*manh_applicability)) 
-    manh_appl_dict = mat2dic(manh_applicability_transposed)
-    #print manh_appl_dict
+        # applicability
+        eucl_applicability_transposed = map(list, zip(*eucl_applicability)) 
+        eucl_appl_dict = mat2dic(eucl_applicability_transposed)
+        #print eucl_appl_dict
 
-    ens_applicability_transposed = map(list, zip(*ens_applicability)) 
-    ens_appl_dict = mat2dic(ens_applicability_transposed)
-    #print ens_appl_dict
+        manh_applicability_transposed = map(list, zip(*manh_applicability)) 
+        manh_appl_dict = mat2dic(manh_applicability_transposed)
+        #print manh_appl_dict
+
+        ens_applicability_transposed = map(list, zip(*ens_applicability)) 
+        ens_appl_dict = mat2dic(ens_applicability_transposed)
+        #print ens_appl_dict
+    else: 
+        eucl_pred_dict = mat2dicSingle(eucl_predictions)
+        manh_pred_dict = mat2dicSingle(manh_predictions)
+        ens_pred_dict = mat2dicSingle(ens_predictions)
+        eucl_appl_dict = mat2dicSingle(eucl_applicability)
+        manh_appl_dict = mat2dicSingle(manh_applicability)
+        ens_appl_dict = mat2dicSingle(ens_applicability)
+       
 
     task = {
         "singleCalculations": {
@@ -441,6 +469,9 @@ def create_task_readacross():
                    }
         }
 
+    #fff = open("C:/Python27/delete123.txt", "w")
+    #fff.writelines(str(task))
+    #fff.close 
     #task = {}
     jsonOutput = jsonify( task )
     
