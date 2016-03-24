@@ -481,9 +481,9 @@ def create_task_readacross():
                    }
         }
 
-    fff = open("C:/Python27/delete123.txt", "w")
-    fff.writelines(str(task))
-    fff.close 
+    #fff = open("C:/Python27/delete123.txt", "w")
+    #fff.writelines(str(task))
+    #fff.close 
     #task = {}
     jsonOutput = jsonify( task )
     
