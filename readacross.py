@@ -95,7 +95,7 @@ def getJsonContentsRA (jsonInput):
     except(ValueError, KeyError, TypeError):
         print "Error: Please check JSON syntax... \n"
     #print len(nanoparticles), len(read_across_datapoints)
-    print readAcrossURIs, read_across_datapoints
+    #print readAcrossURIs, read_across_datapoints
     return variables, datapoints, read_across_datapoints, predictionFeature, target_variable_values, byteify(readAcrossURIs), nanoparticles
 
 def byteify(input):
@@ -210,14 +210,20 @@ def distances (read_across_datapoints, datapoints, variables, readAcrossURIs, na
         np_sorted = [n for d,n in np] # np, dist
         dist_sorted = [round(d,4) for d,n in np]
         eucl_sorted.append([np_sorted, dist_sorted])
-    #print eucl_sorted
+    #print "\n\nSorted\n\n", eucl_sorted
+    ## [ [ [names] [scores] ] [ [N] [S] ]]
+    ##       00      01          10  11    
+
 
     #eucl_transposed = map(list, zip(*eucl_sorted)) 
-    eucl_dict = []
+    eucl_dict = {} # []
     for i in range (len(readAcrossURIs)):
         #print "\n HERE \n ", eucl_sorted[i]
-        eucl_dict.append(mat2dicNN(eucl_sorted[i], readAcrossURIs[i]))
-    #print eucl_dict
+        #eucl_dict.append(mat2dicNN(eucl_sorted[i], readAcrossURIs[i])) #
+        for j in range (len (eucl_sorted[i][0])):
+            eucl_dict[readAcrossURIs[i] + " NN_" + str(j+1)] = [eucl_sorted[i][0][j], eucl_sorted[i][1][j]]
+    eucl_dict = byteify(eucl_dict)
+    #print "\n\nDict\n\n",eucl_dict
 
     max_manh_dist = metrics.pairwise.manhattan_distances(term1, term2)
     manh_dist = metrics.pairwise.manhattan_distances(RA_datapoints_norm, datapoints_norm)
@@ -239,9 +245,12 @@ def distances (read_across_datapoints, datapoints, variables, readAcrossURIs, na
         manh_sorted.append([np_sorted, dist_sorted])
     #print manh_sorted
 
-    manh_dict = []
+    manh_dict = {}
     for i in range (len(readAcrossURIs)):
-        manh_dict.append(mat2dicNN(manh_sorted[i], readAcrossURIs[i]))
+        #manh_dict.append(mat2dicNN(manh_sorted[i], readAcrossURIs[i]))
+        for j in range (len (manh_sorted[i][0])):
+            manh_dict[readAcrossURIs[i] + " NN_" + str(j+1)] = [manh_sorted[i][0][j], manh_sorted[i][1][j]]
+    manh_dict = byteify(manh_dict)
 
     ensemble_dist = (eucl_dist + manh_dist)/2
     #print "Eucl.: ", eucl_dist, "\n Manh.: ", manh_dist,"\n Ens.: ", ensemble_dist
@@ -260,9 +269,12 @@ def distances (read_across_datapoints, datapoints, variables, readAcrossURIs, na
         ens_sorted.append([np_sorted, dist_sorted])
     #print ens_sorted
 
-    ens_dict = []
+    ens_dict = {}
     for i in range (len(readAcrossURIs)):
-        ens_dict.append(mat2dicNN(ens_sorted[i], readAcrossURIs[i]))
+        #ens_dict.append(mat2dicNN(ens_sorted[i], readAcrossURIs[i]))
+        for j in range (len (ens_sorted[i][0])):
+            ens_dict[readAcrossURIs[i] + " NN_" + str(j+1)] = [ens_sorted[i][0][j], ens_sorted[i][1][j]]
+    ens_dict = byteify(ens_dict)
 
     ### PLOT PCA
     pcafig = plt.figure()
@@ -412,13 +424,13 @@ def create_task_readacross():
         ens_appl_dict = mat2dic(ens_applicability_transposed)
         #print ens_appl_dict
     else: 
-        eucl_pred_dict = mat2dicSingle(eucl_predictions)
-        manh_pred_dict = mat2dicSingle(manh_predictions)
-        ens_pred_dict = mat2dicSingle(ens_predictions)
-        eucl_appl_dict = mat2dicSingle(eucl_applicability)
-        manh_appl_dict = mat2dicSingle(manh_applicability)
-        ens_appl_dict = mat2dicSingle(ens_applicability)
-       
+        eucl_pred_dict = mat2dicSingle(eucl_predictions[0])
+        manh_pred_dict = mat2dicSingle(manh_predictions[0])
+        ens_pred_dict = mat2dicSingle(ens_predictions[0])
+        eucl_appl_dict = mat2dicSingle(eucl_applicability[0])
+        manh_appl_dict = mat2dicSingle(manh_applicability[0])
+        ens_appl_dict = mat2dicSingle(ens_applicability[0])
+    #print eucl_pred_dict
 
     task = {
         "singleCalculations": {
@@ -469,9 +481,9 @@ def create_task_readacross():
                    }
         }
 
-    #fff = open("C:/Python27/delete123.txt", "w")
-    #fff.writelines(str(task))
-    #fff.close 
+    fff = open("C:/Python27/delete123.txt", "w")
+    fff.writelines(str(task))
+    fff.close 
     #task = {}
     jsonOutput = jsonify( task )
     
